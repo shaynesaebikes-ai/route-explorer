@@ -3,107 +3,454 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Route Explorer Demo</title>
+    <title>Route Explorer - Interactive Demo</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        #map { height: 400px; width: 100%; }
-        #info { margin-top: 20px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        header p { font-size: 1.1em; opacity: 0.9; }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .route-selector {
+            margin-bottom: 20px;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        
+        .poi-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .poi-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+        
+        .poi-item.nearby {
+            background: #d4edda;
+            border-left-color: #28a745;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
+        }
+        
+        .poi-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .poi-distance {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .poi-distance.close {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .alert {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+        
+        .alert.show { display: block; }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .stats {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .stat-label { font-weight: bold; color: #666; }
+        .stat-value { color: #333; font-family: monospace; }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .btn-start {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-start:hover { background: #218838; }
+        
+        .btn-stop {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-stop:hover { background: #c82333; }
+        
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .map-simulation {
+            background: #e9ecef;
+            height: 300px;
+            border-radius: 5px;
+            border: 2px dashed #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .user-location {
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border: 3px solid white;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 0 0 2px #667eea;
+            transition: all 0.1s linear;
+        }
+        
+        .poi-marker {
+            width: 15px;
+            height: 15px;
+            background: #dc3545;
+            border: 2px solid white;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+        }
+        
+        .poi-marker.nearby {
+            background: #28a745;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.8);
+        }
+        
+        @media (max-width: 768px) {
+            .main-content { grid-template-columns: 1fr; }
+            header h1 { font-size: 1.8em; }
+        }
     </style>
 </head>
 <body>
-    <h1>Route Explorer Demo</h1>
-    <div id="map"></div>
-    <div id="info">
-        <p id="location">Location: Not available</p>
-        <p id="distance">Distance: 0 km</p>
+    <div class="container">
+        <header>
+            <h1>🗺️ Route Explorer</h1>
+            <p>Interactive Demo - Geolocation & POI Tracking</p>
+        </header>
+        
+        <div class="main-content">
+            <!-- Left Section: Routes and POIs -->
+            <div>
+                <div class="section">
+                    <h2>📍 Route Selection</h2>
+                    <div class="route-selector">
+                        <label for="routes">Choose a Route:</label>
+                        <select id="routes">
+                            <option value="route1">Route 1: Downtown NYC</option>
+                            <option value="route2">Route 2: Upper Manhattan</option>
+                            <option value="route3">Route 3: Brooklyn Waterfront</option>
+                        </select>
+                    </div>
+                    
+                    <div class="alert" id="alert">
+                        <strong>🎯 Alert!</strong> You're near a point of interest!
+                    </div>
+                    
+                    <h2 style="margin-top: 20px;">📌 Points of Interest</h2>
+                    <div class="poi-list" id="poiList"></div>
+                </div>
+            </div>
+            
+            <!-- Right Section: Map & Stats -->
+            <div>
+                <div class="section">
+                    <h2>🗺️ Live Map</h2>
+                    <div class="map-simulation" id="mapSimulation"></div>
+                </div>
+                
+                <div class="section">
+                    <h2>📊 Current Stats</h2>
+                    <div class="stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Latitude:</span>
+                            <span class="stat-value" id="statLat">40.7128</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Longitude:</span>
+                            <span class="stat-value" id="statLon">-74.0060</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Nearest POI:</span>
+                            <span class="stat-value" id="statNearest">Calculating...</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Distance:</span>
+                            <span class="stat-value" id="statDistance">0.0 km</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Status:</span>
+                            <span class="stat-value" id="statStatus">Ready</span>
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <button class="btn-start" id="btnStart">▶ Start Route</button>
+                        <button class="btn-stop btn-disabled" id="btnStop" disabled>⏹ Stop Route</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
     <script>
-        // Simulated Points of Interest (POIs)
+        // Points of Interest
         const pois = [
-            { name: 'Location A', lat: 37.7749, lng: -122.4194 },
-            { name: 'Location B', lat: 37.7849, lng: -122.4094 },
-            { name: 'Location C', lat: 37.7949, lng: -122.3994 }
+            { id: 1, name: 'Statue of Liberty', lat: 40.6892, lng: -74.0445, desc: 'Iconic monument' },
+            { id: 2, name: 'Times Square', lat: 40.7580, lng: -73.9855, desc: 'Famous intersection' },
+            { id: 3, name: 'Central Park', lat: 40.7829, lng: -73.9654, desc: 'Large urban park' },
+            { id: 4, name: 'Empire State Building', lat: 40.7484, lng: -73.9857, desc: 'Historic skyscraper' },
+            { id: 5, name: 'Brooklyn Bridge', lat: 40.7061, lng: -73.9969, desc: 'Historic bridge' }
         ];
 
-        let userLocation = { lat: null, lng: null };
+        let userLat = 40.7128;
+        let userLon = -74.0060;
+        let isRunning = false;
+        let simulationInterval = null;
+        let lastAlertPoi = null;
 
-        function initMap() {
-            const map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 12,
-                center: { lat: 37.7749, lng: -122.4194 }
-            });
-
-            // Set up markers for each POI
-            pois.forEach(poi => {
-                new google.maps.Marker({
-                    position: { lat: poi.lat, lng: poi.lng },
-                    map,
-                    title: poi.name
-                });
-            });
-
-            // Get user location
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
-                    userLocation.lat = position.coords.latitude;
-                    userLocation.lng = position.coords.longitude;
-                    const userMarker = new google.maps.Marker({
-                        position: userLocation,
-                        map,
-                        title: 'Your Location'
-                    });
-                    document.getElementById('location').innerText = `Location: (${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)})`;
-
-                    // Calculate distance from user to nearest POI
-                    calculateDistance(userLocation);
-                }, () => {
-                    handleLocationError(true, map);
-                });
-            } else {
-                handleLocationError(false, map);
-            }
+        // Initialize
+        function init() {
+            renderPOIList();
+            renderMapSimulation();
         }
 
-        function calculateDistance(location) {
-            let nearestDistance = Infinity;
+        // Calculate distance using Haversine formula
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // Render POI list
+        function renderPOIList() {
+            const list = document.getElementById('poiList');
+            list.innerHTML = pois.map(poi => {
+                const distance = calculateDistance(userLat, userLon, poi.lat, poi.lng);
+                const isNearby = distance < 0.1;
+                return `
+                    <div class="poi-item ${isNearby ? 'nearby' : ''}">
+                        <div class="poi-name">${poi.name}</div>
+                        <div class="poi-distance ${isNearby ? 'close' : ''}">
+                            ${isNearby ? '🎯 ' : '📍 '}${(distance * 1000).toFixed(0)}m away
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render map simulation
+        function renderMapSimulation() {
+            const map = document.getElementById('mapSimulation');
+            map.innerHTML = '';
+
+            // Map bounds
+            const minLat = 40.65, maxLat = 40.85;
+            const minLng = -74.05, maxLng = -73.90;
+
+            // Plot POIs
+            pois.forEach(poi => {
+                const x = ((poi.lng - minLng) / (maxLng - minLng)) * 100;
+                const y = ((maxLat - poi.lat) / (maxLat - minLat)) * 100;
+                const distance = calculateDistance(userLat, userLon, poi.lat, poi.lng);
+                const isNearby = distance < 0.1;
+                
+                const marker = document.createElement('div');
+                marker.className = `poi-marker ${isNearby ? 'nearby' : ''}`;
+                marker.style.left = x + '%';
+                marker.style.top = y + '%';
+                marker.title = poi.name;
+                map.appendChild(marker);
+            });
+
+            // Plot user location
+            const userX = ((userLon - minLng) / (maxLng - minLng)) * 100;
+            const userY = ((maxLat - userLat) / (maxLat - minLat)) * 100;
+            
+            const userMarker = document.createElement('div');
+            userMarker.className = 'user-location';
+            userMarker.style.left = userX + '%';
+            userMarker.style.top = userY + '%';
+            userMarker.title = 'Your Location';
+            map.appendChild(userMarker);
+        }
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('statLat').textContent = userLat.toFixed(6);
+            document.getElementById('statLon').textContent = userLon.toFixed(6);
+
+            let minDistance = Infinity;
             let nearestPoi = null;
             pois.forEach(poi => {
-                const distance = getDistanceFromLatLonInKm(location.lat, location.lng, poi.lat, poi.lng);
-                if (distance < nearestDistance) {
-                    nearestDistance = distance;
+                const distance = calculateDistance(userLat, userLon, poi.lat, poi.lng);
+                if (distance < minDistance) {
+                    minDistance = distance;
                     nearestPoi = poi.name;
                 }
             });
-            document.getElementById('distance').innerText = `Distance to ${nearestPoi}: ${nearestDistance.toFixed(2)} km`;
+
+            document.getElementById('statNearest').textContent = nearestPoi;
+            document.getElementById('statDistance').textContent = (minDistance).toFixed(3) + ' km';
+
+            // Check for nearby POIs
+            pois.forEach(poi => {
+                const distance = calculateDistance(userLat, userLon, poi.lat, poi.lng);
+                if (distance < 0.1 && lastAlertPoi !== poi.id) {
+                    lastAlertPoi = poi.id;
+                    showAlert(poi.name, distance);
+                }
+            });
         }
 
-        function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Radius of the Earth in km
-            const dLat = deg2rad(lat2 - lat1);
-            const dLon = deg2rad(lon2 - lon1);
-            const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            const distance = R * c; // Distance in km
-            return distance;
+        // Show alert
+        function showAlert(poiName, distance) {
+            const alert = document.getElementById('alert');
+            alert.innerHTML = `<strong>🎯 Alert!</strong> You're near ${poiName} (${(distance * 1000).toFixed(0)}m)!`;
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), 3000);
         }
 
-        function deg2rad(deg) {
-            return deg * (Math.PI / 180);
+        // Simulate movement
+        function startSimulation() {
+            isRunning = true;
+            document.getElementById('btnStart').disabled = true;
+            document.getElementById('btnStart').classList.add('btn-disabled');
+            document.getElementById('btnStop').disabled = false;
+            document.getElementById('btnStop').classList.remove('btn-disabled');
+            document.getElementById('statStatus').textContent = 'Traveling...';
+
+            simulationInterval = setInterval(() => {
+                userLat += (Math.random() - 0.5) * 0.002;
+                userLon += (Math.random() - 0.5) * 0.002;
+                renderPOIList();
+                renderMapSimulation();
+                updateStats();
+            }, 500);
         }
 
-        function handleLocationError(browserHasGeolocation, map) {
-            const infoWindow = new google.maps.InfoWindow();
-            infoWindow.setPosition(map.getCenter());
-            infoWindow.setContent(browserHasGeolocation ? 
-                'Error: The Geolocation service failed.' : 'Error: Your browser doesn\u2019t support geolocation.');
-            infoWindow.open(map);
+        // Stop simulation
+        function stopSimulation() {
+            isRunning = false;
+            clearInterval(simulationInterval);
+            document.getElementById('btnStart').disabled = false;
+            document.getElementById('btnStart').classList.remove('btn-disabled');
+            document.getElementById('btnStop').disabled = true;
+            document.getElementById('btnStop').classList.add('btn-disabled');
+            document.getElementById('statStatus').textContent = 'Stopped';
+            lastAlertPoi = null;
         }
-    </script>
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+
+        // Event listeners
+        document.getElementById('btnStart').addEventListener('click', startSimulation);
+        document.getElementById('btnStop').addEventListener('click', stopSimulation);
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            init();
+            updateStats();
+        });
     </script>
 </body>
 </html>
