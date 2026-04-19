@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Explorer Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #map { height: 600px; width: 100%; }
+    </style>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
+</head>
+<body>
+    <h1>Route Explorer Demo</h1>
+    <div id="map"></div>
+    <script>
+        // Mapbox Access Token
+        mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN';
+
+        // Initialize map
+        const map = new mapboxgl.Map({
+            container: 'map', // Container ID
+            style: 'mapbox://styles/mapbox/streets-v11', // Style URL
+            center: [-74.5, 40], // Starting position [lng, lat]
+            zoom: 9 // Starting zoom
+        });
+
+        // Geolocation
+        navigator.geolocation.getCurrentPosition(position => {
+            const userLocation = [position.coords.longitude, position.coords.latitude];
+            map.setCenter(userLocation);
+
+            new mapboxgl.Marker()
+                .setLngLat(userLocation)
+                .addTo(map);
+        });
+
+        // Real-time distance calculation
+        function calculateDistance(start, end) {
+            const R = 6371; // Radius of the Earth in km
+            const dLat = (end.lat - start.lat) * Math.PI / 180;
+            const dLon = (end.lng - start.lng) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(start.lat * Math.PI / 180) * Math.cos(end.lat * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // Distance in km
+        }
+
+        // Example usage of calculateDistance function
+        const pointA = {lat: 40, lng: -74.5};
+        const pointB = {lat: 40.1, lng: -74.6};
+        console.log(`Distance: ${calculateDistance(pointA, pointB).toFixed(2)} km`);
+    </script>
+</body>
+</html>
