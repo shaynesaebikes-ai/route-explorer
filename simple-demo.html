@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Explorer</title>
+    <style>
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+        }
+        #left-panel {
+            width: 30%;
+            padding: 20px;
+            border-right: 1px solid #ccc;
+        }
+        #right-panel {
+            width: 70%;
+            padding: 20px;
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div id="left-panel">
+        <h2>Route Selector</h2>
+        <select id="route-selector">
+            <option value="route1">Route 1</option>
+            <option value="route2">Route 2</option>
+            <option value="route3">Route 3</option>
+        </select>
+        <h2>Points of Interest</h2>
+        <ul id="poi-list">
+            <li>POI 1</li>
+            <li>POI 2</li>
+            <li>POI 3</li>
+        </ul>
+    </div>
+    <div id="right-panel">
+        <h2>Map Simulation</h2>
+        <div id="map"></div>
+        <h2>Distance Calculation</h2>
+        <p>Distance: <span id="distance">0</span> km</p>
+    </div>
+    <script>
+        // Geolocation simulation and distance calculation
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+            console.log('Current location: ', latitude, longitude);
+            // Simulate distance calculation
+            var distance = Math.random() * 10; // Random distance for demo
+            document.getElementById('distance').innerText = distance.toFixed(2);
+        }, function() {
+            alert('Geolocation permission denied.');
+        });
+    </script>
+</body>
+</html>
